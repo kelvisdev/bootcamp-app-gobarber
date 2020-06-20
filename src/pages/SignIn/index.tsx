@@ -1,28 +1,24 @@
 import React, { useCallback, useRef } from 'react';
 import {
-  TextInput,
   Image,
   View,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert
-}
-from 'react-native';
-
+  TextInput,
+  Alert,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
-import * as Yup from 'yup';
-
 import { Form } from '@unform/mobile';
 import { FormHandles } from '@unform/core';
+import * as Yup from 'yup';
 
+import { useAuth } from '../../hooks/auth';
 import getValidationErrors from '../../utils/getValidationErrors';
 
-import Input from './../../components/Input';
+import Input from '../../components/Input';
 import Button from '../../components/Button';
-
-import logoImg from '../../assets/logo.png';
 
 import {
   Container,
@@ -30,8 +26,10 @@ import {
   ForgotPassword,
   ForgotPasswordText,
   CreateAccountButton,
-  CreateAccountButtonText
+  CreateAccountButtonText,
 } from './styles';
+
+import logoImg from '../../assets/logo.png';
 
 interface SignFormData {
   email: string;
@@ -41,11 +39,10 @@ interface SignFormData {
 const SignIn: React.FC = () => {
   const formRef = useRef<FormHandles>(null);
   const passwordInputRef = useRef<TextInput>(null);
+
   const navigation = useNavigation();
 
-  // const handleSignIn = useCallback((data: object) => {
-  //   console.log(data);
-  // }, [])
+  const { signIn } = useAuth();
 
   const handleSignIn = useCallback(
     async (data: SignFormData) => {
@@ -55,7 +52,7 @@ const SignIn: React.FC = () => {
         const schema = Yup.object().shape({
           email: Yup.string()
             .required('E-mail obrigatório')
-            .email('Gigite um e-mail válido'),
+            .email('Digite um e-mail válido'),
           password: Yup.string().required('Senha obrigatória'),
         });
 
@@ -63,12 +60,10 @@ const SignIn: React.FC = () => {
           abortEarly: false,
         });
 
-        // await signIn({
-        //   email: data.email,
-        //   password: data.password,
-        // });
-
-        // history.push('/dashboard');
+        await signIn({
+          email: data.email,
+          password: data.password,
+        });
       } catch (error) {
         if (error instanceof Yup.ValidationError) {
           const errors = getValidationErrors(error);
@@ -78,11 +73,13 @@ const SignIn: React.FC = () => {
         }
 
         Alert.alert(
-          'Erro na autenticação',
-          'Ocorreu um erro ao fazer login, cheque as credencias.',
+          'Erro na Autenticação',
+          'Ocorreu um erro ao fazer login, cheque as credenciais',
         );
       }
-  }, []);
+    },
+    [signIn],
+  );
 
   return (
     <>
@@ -97,12 +94,12 @@ const SignIn: React.FC = () => {
         >
           <Container>
             <Image source={logoImg} />
+
             <View>
               <Title>Faça seu logon</Title>
             </View>
 
             <Form ref={formRef} onSubmit={handleSignIn}>
-
               <Input
                 autoCorrect={false}
                 autoCapitalize="none"
@@ -115,7 +112,6 @@ const SignIn: React.FC = () => {
                   passwordInputRef.current?.focus();
                 }}
               />
-
               <Input
                 ref={passwordInputRef}
                 name="password"
@@ -131,26 +127,29 @@ const SignIn: React.FC = () => {
               <Button
                 onPress={() => {
                   formRef.current?.submitForm();
-                }}>
+                }}
+              >
                 Entrar
               </Button>
             </Form>
 
-
-
-            <ForgotPassword onPress={() => { }}>
+            <ForgotPassword onPress={() => {}}>
               <ForgotPasswordText>Esqueci minha senha</ForgotPasswordText>
             </ForgotPassword>
           </Container>
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <CreateAccountButton onPress={() => navigation.navigate('SignUp')}>
+      <CreateAccountButton
+        onPress={() => {
+          navigation.navigate('SignUp');
+        }}
+      >
         <Icon name="log-in" size={20} color="#ff9000" />
         <CreateAccountButtonText>Criar uma conta</CreateAccountButtonText>
       </CreateAccountButton>
     </>
   );
-}
+};
 
 export default SignIn;
